@@ -1,7 +1,7 @@
 (ns clj-nvim.core
   (:require
-    [clj-nvim.prettify :as pretty]
-    [neovim-client.nvim :as nvim])
+     [clj-nvim.prettify :as pretty]
+     [neovim-client.nvim :as nvim])
   (:gen-class))
 
 (defn -main
@@ -10,7 +10,8 @@
     (nvim/register-method!
       conn
       "tidy-ns"
-      (fn [] (pretty/update-current-ns conn)))
-    (println "Registered, now waiting")
+      (fn [msg]
+        (future (pretty/update-current-ns conn))
+        "ok"))
     (while true
       (Thread/sleep 100))))
