@@ -2,6 +2,8 @@ let s:p_dir = expand('<sfile>:p:h')
 let s:server_is_running = 0
 let s:job_id = 0
 
+" TODO Move functions into autoload
+" TODO Make command to start/stop/run tidy
 function! s:StartIfNotRunning()
     if s:server_is_running == 0
         echo 'starting plugin...'

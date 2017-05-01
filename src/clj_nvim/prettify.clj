@@ -93,6 +93,7 @@
           z/up))
     ns-form))
 
+; TODO: handle extra spaces after requires
 (defn update-current-ns
   [conn]
   (let [orig-ns (read-ns-form conn)
