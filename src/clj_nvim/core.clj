@@ -1,7 +1,7 @@
 (ns clj-nvim.core
   (:require
-     [clj-nvim.prettify :as pretty]
-     [neovim-client.nvim :as nvim])
+    [clj-nvim.prettify :as pretty]
+    [neovim-client.nvim :as nvim])
   (:gen-class))
 
 (defn -main
