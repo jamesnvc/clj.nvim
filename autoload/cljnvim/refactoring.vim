@@ -13,8 +13,18 @@ function! cljnvim#refactoring#StartIfNotRunning()
     endif
 endfunction
 
+function! cljnvim#refactoring#StopIfRunning()
+  if s:server_is_running != 0
+    try
+      jobstop(s:job_id)
+    finally
+      let s:server_is_running = 0
+    endtry
+  endif
+endfunction
+
 function! cljnvim#refactoring#TidyNs()
     call cljnvim#refactoring#StartIfNotRunning()
-    let res = rpcrequest(s:job_id, 'tidy-ns')
-    return res
+    let l:res = rpcrequest(s:job_id, 'tidy-ns')
+    return l:res
 endfunction

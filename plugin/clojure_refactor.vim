@@ -4,6 +4,8 @@ endif
 let g:loaded_clj_nvim = 1
 
 function! s:set_up_commands() abort
+  command! -buffer -bar -nargs=0 StartJob call cljnvim#refactoring#StartIfNotRunning()
+  command! -buffer -bar -nargs=0 StopJob call cljnvim#refactoring#StopIfRunning()
   command! -buffer -bar -nargs=0 TidyNS call cljnvim#refactoring#TidyNs()
 endfunction
 
