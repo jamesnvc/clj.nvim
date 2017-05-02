@@ -1,21 +1,14 @@
-let s:p_dir = expand('<sfile>:p:h')
-let s:server_is_running = 0
-let s:job_id = 0
+if exists('g:loaded_clj_nvim') || !has('nvim')
+  finish
+endif
+let g:loaded_clj_nvim = 1
 
-" TODO Move functions into autoload
-" TODO Make command to start/stop/run tidy
-function! s:StartIfNotRunning()
-    if s:server_is_running == 0
-        echo 'starting plugin...'
-        let jar_file_path = s:p_dir . '/../target/clj-nvim-0.1.0-SNAPSHOT-standalone.jar'
-        let s:job_id = jobstart(['java', '-jar', jar_file_path], {'rpc': v:true})
-        let s:server_is_running = 1
-        echo 'started'
-    endif
+function! s:set_up_commands() abort
+  command! -buffer -bar -nargs=0 TidyNS call cljnvim#refactoring#TidyNs()
 endfunction
 
-function! CljRefactorTidyNs()
-    call s:StartIfNotRunning()
-    let res = rpcrequest(s:job_id, 'tidy-ns')
-    return res
-endfunction
+augroup clj_nvim_connect
+  autocmd!
+  autocmd FileType clojure call cljnvim#refactoring#StartIfNotRunning()
+  autocmd FileType clojure call s:set_up_commands()
+augroup END
