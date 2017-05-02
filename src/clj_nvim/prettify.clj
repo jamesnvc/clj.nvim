@@ -60,6 +60,15 @@
              seq))
     (cons (first imp) (sort (rest imp)))))
 
+(defn indent-items
+  "Given a sequence of sexps, indent them to the given level by interleaving
+  them with rewrite-clj whitespace & newline nodes"
+  [level items]
+  (->> items
+       (mapcat (fn [s] [(node/spaces level) s (node/newlines 1)]))
+       ; strip off trailing newline
+       butlast))
+
 (defn fix-form
   "Helper function for fixing require or import forms in a namespace
   declaration, indenting the import/requires as we prefer"
@@ -70,13 +79,8 @@
           (z/edit (fn [[_ & fs]]
                     (->> fs
                          (map fixfn)
-                         ; sort the require/imports
                          (sort-by first)
-                         ; indent them & put them one per line
-                         (mapcat (fn [n] [(node/spaces (inc col))
-                                          n
-                                          (node/newlines 1)]))
-                         butlast
+                         (indent-items (inc col))
                          (cons (node/newlines 1))
                          (cons startk)
                          node/list-node)))
@@ -91,14 +95,35 @@
   [ns-form]
   (fix-form ns-form :import (comp canonicalize-import ensure-list)))
 
+(defn check-refers
+  [[req-ns & {refs :refer as :as} :as req] zbody]
+  (letfn [(used? [v] (some? (z/find-value zbody z/next v)))]
+    (if-not refs
+      req
+      (if-let [used (seq (filter used? refs))]
+        [req-ns :as as :refer (vec used)]
+        [req-ns :as as]))))
+
+(defn filter-unused-refers
+  [zns zbody]
+  (let [requires (-> zns (find-under :require))]
+    (loop [z requires]
+      (cond
+        (z/end? (z/right z)) (-> z z/up z/up)
+
+        (z/vector? z) (recur (-> z
+                                 (z/edit (fn [req] (check-refers req zbody)))
+                                 z/right))
+
+        :else (recur (z/right z))))))
+
 ;; Neovim interaction
 
 (defn read-ns-form
   "Read the namespace declaration from the current buffer of the given neovim
   client as a rewrite-clj zipper"
-  [conn]
-  (let [buf (api/get-current-buf conn)
-        lines (buf/get-lines conn buf 0 -1 false)
+  [buf conn]
+  (let [lines (buf/get-lines conn buf 0 -1 false)
         data (z/of-string (string/join "\n" lines) {:track-position? true})]
     (-> data z/next (z/find-value 'ns) z/up)))
 
@@ -106,7 +131,8 @@
   "Read the current namespace, format it according to our style preference,
   then write it back"
   [conn]
-  (let [orig-ns (read-ns-form conn)
+  (let [buf (api/get-current-buf conn)
+        orig-ns (read-ns-form buf conn)
         start-line (-> orig-ns z/position first dec)
         end-line (-> orig-ns z/right z/position first dec dec)
         sorted (-> orig-ns
@@ -115,5 +141,20 @@
                    z/string
                    (string/split #"\n"))]
     (buf/set-lines
-      conn (api/get-current-buf conn)
+      conn buf
       start-line end-line false sorted)))
+
+(defn remove-unused-refers
+  "Go through the namespace and remove any referred vars that are unused"
+  [conn]
+  (let [buf (api/get-current-buf conn)
+        ns-form (read-ns-form buf conn)
+        start-line (-> ns-form z/position first dec)
+        end-line (-> ns-form z/right z/position first dec dec)
+        body (z/right ns-form)
+        updated (-> (filter-unused-refers ns-form body)
+                    z/string
+                    (string/split #"\n"))]
+    (buf/set-lines
+      conn buf
+      start-line end-line false updated)))
