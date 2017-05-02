@@ -16,7 +16,7 @@ endfunction
 function! cljnvim#refactoring#StopIfRunning()
   if s:server_is_running != 0
     try
-      jobstop(s:job_id)
+      call jobstop(s:job_id)
     finally
       let s:server_is_running = 0
     endtry
