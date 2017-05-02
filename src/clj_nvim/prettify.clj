@@ -86,7 +86,6 @@
   [ns-form]
   (fix-form ns-form :import (comp canonicalize-import ensure-list)))
 
-; TODO: handle extra spaces after requires
 (defn update-current-ns
   [conn]
   (let [orig-ns (read-ns-form conn)
