@@ -49,22 +49,28 @@
       (when as [:as as])
       (when refer [:refer (vec (sort refer))]))))
 
-(defn sort-require-form
-  [ns-form]
-  (if-let [req-form (-> ns-form (find-under :require) z/up)]
+(defn fix-form
+  [ns-form startk fixfn]
+  (if-let [req-form (-> ns-form (find-under startk) z/up)]
     (let [[_ col] (z/position req-form)]
       (-> req-form
           (z/edit (fn [[_ & fs]]
                     (->> fs
-                         (map (comp canonicalize-require ensure-vec))
+                         (map fixfn)
                          (sort-by first)
-                         node/line-separated
-                         (mapcat (fn [n] [(node/spaces (+ 2 col)) n]))
+                         (mapcat (fn [n] [(node/spaces (inc col))
+                                          n
+                                          (node/newlines 1)]))
+                         butlast
                          (cons (node/newlines 1))
-                         (cons :require)
+                         (cons startk)
                          node/list-node)))
           z/up))
     ns-form))
+
+(defn fix-require-form
+  [ns-form]
+  (fix-form ns-form :require (comp canonicalize-require ensure-vec)))
 
 (defn canonicalize-import
   [imp]
@@ -76,22 +82,9 @@
              seq))
     (cons (first imp) (sort (rest imp)))))
 
-(defn sort-import-form
+(defn fix-import-form
   [ns-form]
-  (if-let [req-form (-> ns-form (find-under :import) z/up)]
-    (let [[line col] (z/position req-form)]
-      (-> req-form
-          (z/edit (fn [[_ & fs]]
-                    (->> fs
-                         (map (comp canonicalize-import ensure-list))
-                         (sort-by first)
-                         node/line-separated
-                         (mapcat (fn [n] [(node/spaces (+ 2 col)) n]))
-                         (cons (node/newlines 1))
-                         (cons :import)
-                         node/list-node)))
-          z/up))
-    ns-form))
+  (fix-form ns-form :import (comp canonicalize-import ensure-list)))
 
 ; TODO: handle extra spaces after requires
 (defn update-current-ns
@@ -100,8 +93,8 @@
         start-line (-> orig-ns z/position first dec)
         end-line (-> orig-ns z/right z/position first dec dec)
         sorted (-> orig-ns
-                   sort-require-form
-                   sort-import-form
+                   fix-require-form
+                   fix-import-form
                    z/string
                    (string/split #"\n"))]
     (buf/set-lines
