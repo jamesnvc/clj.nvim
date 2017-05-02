@@ -7,6 +7,7 @@ function! s:set_up_commands() abort
   command! -buffer -bar -nargs=0 StartJob call cljnvim#refactoring#StartIfNotRunning()
   command! -buffer -bar -nargs=0 StopJob call cljnvim#refactoring#StopIfRunning()
   command! -buffer -bar -nargs=0 TidyNS call cljnvim#refactoring#TidyNs()
+  command! -buffer -bar -nargs=0 CleanRefers call cljnvim#refactoring#CleanRefers()
 endfunction
 
 augroup clj_nvim_connect

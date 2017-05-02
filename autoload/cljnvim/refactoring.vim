@@ -28,3 +28,9 @@ function! cljnvim#refactoring#TidyNs()
     let l:res = rpcrequest(s:job_id, 'tidy-ns')
     return l:res
 endfunction
+
+function! cljnvim#refactoring#CleanRefers()
+  call cljnvim#refactoring#StartIfNotRunning()
+  let l:res = rpcrequest(s:job_id, 'clean-refers')
+  return l:res
+endfunction

@@ -13,5 +13,13 @@
       (fn [msg]
         (future (pretty/update-current-ns conn))
         "ok"))
+
+    (nvim/register-method!
+      conn
+      "clean-refers"
+      (fn [msg]
+        (future (pretty/remove-unused-refers conn))
+        "ok"))
+
     (while true
       (Thread/sleep 100))))
