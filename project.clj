@@ -7,6 +7,7 @@
                  [org.clojure/tools.reader "1.0.0-beta4"]
                  [jamesnvc/neovim-client "0.1.1"]
                  [rewrite-clj "0.6.0" :exclusions [org.clojure/tools.reader]]]
-  :main clj-nvim.core-shim
+  :main clj-nvim.core
 
-  :profiles {:uberjar {:aot [clj-nvim.core-shim]}})
+  :profiles {:uberjar {:aot [clj-nvim.core-shim]
+                       :main clj-nvim.core-shim}})
