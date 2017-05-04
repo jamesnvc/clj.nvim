@@ -140,9 +140,11 @@
                    fix-import-form
                    z/string
                    (string/split #"\n"))]
-    (buf/set-lines
-      conn buf
-      start-line end-line false sorted)))
+    (when-not (= (buf/get-lines conn buf start-line end-line false)
+                 sorted)
+      (buf/set-lines
+        conn buf
+        start-line end-line false sorted))))
 
 (defn remove-unused-refers
   "Go through the namespace and remove any referred vars that are unused"
