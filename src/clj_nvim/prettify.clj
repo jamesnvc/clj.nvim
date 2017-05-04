@@ -127,6 +127,8 @@
         data (z/of-string (string/join "\n" lines) {:track-position? true})]
     (-> data z/next (z/find-value 'ns) z/up)))
 
+; TODO: fix weird issue where if the first line after the ns is a comment it eats it and/or the whitespace?
+
 (defn update-current-ns
   "Read the current namespace, format it according to our style preference,
   then write it back"
