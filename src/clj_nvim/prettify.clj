@@ -98,11 +98,12 @@
 (defn check-refers
   [[req-ns & {refs :refer as :as} :as req] zbody]
   (letfn [(used? [v] (some? (z/find-value zbody z/next v)))]
-    (if-not refs
-      req
-      (if-let [used (seq (filter used? refs))]
-        [req-ns :as as :refer (vec used)]
-        [req-ns :as as]))))
+    (vec
+      (concat
+        [req-ns]
+        (when as [:as as])
+        (when-let [used (and (coll? refs) (seq (filter used? refs)))]
+          [:refer (vec used)])))))
 
 (defn filter-unused-refers
   [zns zbody]
