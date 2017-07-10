@@ -42,12 +42,13 @@
 
 (defn canonicalize-require
   "Format a given require vector in our canonical form"
-  [[req-ns & {:keys [as refer]}]]
+  [[req-ns & {:keys [as refer refer-macros]}]]
   (vec
     (concat
       [req-ns]
       (when as [:as as])
-      (when refer [:refer (vec (sort refer))]))))
+      (when refer [:refer (vec (sort refer))])
+      (when refer-macros [:refer-macros (vec (sort refer-macros))]))))
 
 (defn canonicalize-import
   "Format a given import list in our canonical form (i.e. a sorted prefix list)"
